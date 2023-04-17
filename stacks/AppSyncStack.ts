@@ -14,6 +14,7 @@ export function AppSyncStack({ stack }: StackContext) {
     schema: "packages/functions/app-sync/src/graphql/schema.graphql",
     defaults: {
       function: {
+        memorySize: "2 GB",
         // Bind the table name to the function
         bind: [notesTable],
       },
