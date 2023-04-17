@@ -30,6 +30,23 @@ export function HttpApiStack({ stack }: StackContext) {
     },
   });
 
+  // Create the HTTP API
+  const apiIam = new Api(stack, "ApiIam", {
+    routes: {
+      "POST /graphql": "packages/functions/apollo/src/main.handler",
+    },
+    defaults: {
+      authorizer: "iam",
+      function: {
+        memorySize: "2 GB",
+        bind: [notesTable],
+        copyFiles: [
+          { from: "packages/functions/apollo/src/graphql/schema.graphql" },
+        ],
+      },
+    },
+  });
+
   // Create REST API
   const RESTapi = new ApiGatewayV1Api(stack, "RESTApi", {
     routes: {
@@ -48,13 +65,21 @@ export function HttpApiStack({ stack }: StackContext) {
 
   // standalone function api
   const apiFunction = new Function(stack, "FunctionApi", {
+    memorySize: "2 GB",
     handler: "packages/functions/apollo/src/main.handler",
-    url: true,
+    bind: [notesTable],
+    copyFiles: [
+      { from: "packages/functions/apollo/src/graphql/schema.graphql" },
+    ],
+    url: {
+      authorizer: "iam",
+    },
   });
 
   // Show the API endpoint in the output
   stack.addOutputs({
     ApiEndpoint: api.url,
+    ApiIAMEndpoint: apiIam.url,
     RESTEndpoint: RESTapi.url,
     FunctionApi: apiFunction.url,
   });
